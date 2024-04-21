@@ -8,11 +8,14 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 public final class StreamEditor {
 
     @FunctionalInterface
     public interface Rule {
+
         Optional<String> rewrite(String line);
 
         static Rule andThen(Rule first, Rule second) {
@@ -25,6 +28,13 @@ public final class StreamEditor {
             Objects.requireNonNull(rule);
             return line -> this.rewrite(line).flatMap(rule::rewrite);
         }
+
+        static Rule guard(Predicate<String> predicate, Rule rule){
+            Objects.requireNonNull(predicate);
+            Objects.requireNonNull(rule);
+            return line -> predicate.test(line) ? rule.rewrite(line) : Optional.of(line);
+        }
+
     }
 
     private final Rule rule;
@@ -54,7 +64,7 @@ public final class StreamEditor {
         }
     }
 
-    private static Rule evaluate(int c){
+    private static Rule evaluateRule(int c){
         return switch (c){
             case 's' -> line -> Optional.of(line.replaceAll("\\s+", ""));
             case 'u' -> line -> Optional.of(line.toUpperCase(Locale.ROOT));
@@ -64,13 +74,22 @@ public final class StreamEditor {
         };
     }
 
-    public static Rule createRules(String rule){
+    private static Rule evaluateRules(String rule){
         return Objects.requireNonNull(rule).chars()
-                .mapToObj(StreamEditor::evaluate)
+                .mapToObj(StreamEditor::evaluateRule)
                 .reduce((rule1, rule2) -> rule1.andThen(rule2)) // Rule::andThen if we remove the static method
                 .orElse(Optional::of);
     }
 
-
+    public static Rule createRules(String rule){
+        Objects.requireNonNull(rule);
+        var matcher = Pattern.compile("(.*?)i=(.*?);(.*?)").matcher(rule);
+        if(matcher.matches()){
+            var leadingRules = evaluateRules(matcher.group(1));
+            var guardedRules = Rule.guard(matcher.group(2)::equals, evaluateRules(matcher.group(3)));
+            return leadingRules.andThen(guardedRules);
+        }
+        return evaluateRules(rule);
+    }
 
 }
