@@ -93,8 +93,8 @@ public final class StreamEditor {
             var leadingRules = evaluateRules(ifMatcher.group(1));
             var tempRules = evaluateRules(ifMatcher.group(2));
             var guardPattern = Pattern.compile(ifMatcher.group(3));
-            Predicate<String> guardMatcher = g -> guardPattern.matcher(g).matches();
-            var guardedRules = Rule.guard(tempRules.withAsFilter(guardMatcher), evaluateRules(ifMatcher.group(4)));
+            Predicate<String> guardCondition = g -> guardPattern.matcher(g).matches();
+            var guardedRules = Rule.guard(tempRules.withAsFilter(guardCondition), evaluateRules(ifMatcher.group(4)));
             return leadingRules.andThen(guardedRules);
         }
         return evaluateRules(rule);
