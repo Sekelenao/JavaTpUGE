@@ -846,8 +846,6 @@ public class StreamEditorTest {
         }
     }
 
-    /*
-
     @Nested
     class Q9 {
         @Test
@@ -968,7 +966,5 @@ public class StreamEditorTest {
                     """, writer.toString());
         }
     }
-
-    */
 
 }

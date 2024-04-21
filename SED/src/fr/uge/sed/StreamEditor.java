@@ -35,6 +35,11 @@ public final class StreamEditor {
             return line -> predicate.test(line) ? rule.rewrite(line) : Optional.of(line);
         }
 
+        default Predicate<String> withAsFilter(Predicate<String> predicate){
+            Objects.requireNonNull(predicate);
+            return line -> predicate.test(this.rewrite(line).orElse(""));
+        }
+
     }
 
     private final Rule rule;
@@ -83,11 +88,13 @@ public final class StreamEditor {
 
     public static Rule createRules(String rule){
         Objects.requireNonNull(rule);
-        var ifMatcher = Pattern.compile("(.*?)i=(.*?);(.*?)").matcher(rule);
+        var ifMatcher = Pattern.compile("(.*?)i(.*?)=(.*?);(.*?)").matcher(rule);
         if(ifMatcher.matches()){
             var leadingRules = evaluateRules(ifMatcher.group(1));
-            Predicate<String> guardMatcher = g -> Pattern.compile(ifMatcher.group(2)).matcher(g).matches();
-            var guardedRules = Rule.guard(guardMatcher, evaluateRules(ifMatcher.group(3)));
+            var tempRules = evaluateRules(ifMatcher.group(2));
+            var guardPattern = Pattern.compile(ifMatcher.group(3));
+            Predicate<String> guardMatcher = g -> guardPattern.matcher(g).matches();
+            var guardedRules = Rule.guard(tempRules.withAsFilter(guardMatcher), evaluateRules(ifMatcher.group(4)));
             return leadingRules.andThen(guardedRules);
         }
         return evaluateRules(rule);
