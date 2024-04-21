@@ -100,4 +100,7 @@ public final class StreamEditor {
         return evaluateRules(rule);
     }
 
+    // .* matches zero or more occurrences of any character, as many as possible (greedy).
+    // .*? also matches zero or more occurrences of any character, but as few as possible (reluctant or non-greedy).
+
 }
