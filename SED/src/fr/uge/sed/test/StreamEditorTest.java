@@ -761,8 +761,6 @@ public class StreamEditorTest {
         }
     }
 
-    /*
-
     @Nested
     class Q8 {
         @Test
@@ -848,6 +846,7 @@ public class StreamEditorTest {
         }
     }
 
+    /*
 
     @Nested
     class Q9 {

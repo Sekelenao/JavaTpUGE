@@ -83,10 +83,11 @@ public final class StreamEditor {
 
     public static Rule createRules(String rule){
         Objects.requireNonNull(rule);
-        var matcher = Pattern.compile("(.*?)i=(.*?);(.*?)").matcher(rule);
-        if(matcher.matches()){
-            var leadingRules = evaluateRules(matcher.group(1));
-            var guardedRules = Rule.guard(matcher.group(2)::equals, evaluateRules(matcher.group(3)));
+        var ifMatcher = Pattern.compile("(.*?)i=(.*?);(.*?)").matcher(rule);
+        if(ifMatcher.matches()){
+            var leadingRules = evaluateRules(ifMatcher.group(1));
+            Predicate<String> guardMatcher = g -> Pattern.compile(ifMatcher.group(2)).matcher(g).matches();
+            var guardedRules = Rule.guard(guardMatcher, evaluateRules(ifMatcher.group(3)));
             return leadingRules.andThen(guardedRules);
         }
         return evaluateRules(rule);
