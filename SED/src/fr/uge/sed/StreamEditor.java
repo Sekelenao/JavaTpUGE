@@ -14,6 +14,12 @@ public final class StreamEditor {
     @FunctionalInterface
     public interface Rule {
         Optional<String> rewrite(String line);
+
+        static Rule andThen(Rule first, Rule second) {
+            Objects.requireNonNull(first);
+            Objects.requireNonNull(second);
+            return line -> first.rewrite(line).flatMap(second::rewrite);
+        }
     }
 
     private final Rule rule;
@@ -43,15 +49,23 @@ public final class StreamEditor {
         }
     }
 
-    public static Rule createRules(String rule){
-        Objects.requireNonNull(rule);
-        return switch (rule){
-            case "s" -> line -> Optional.of(line.replaceAll("\\s+", ""));
-            case "u" -> line -> Optional.of(line.toUpperCase(Locale.ROOT));
-            case "l" -> line -> Optional.of(line.toLowerCase(Locale.ROOT));
-            case "d" -> _ -> Optional.empty();
-            default -> throw new IllegalArgumentException(STR."Unexpected value: \{rule}");
+    private static Rule evaluate(int c){
+        return switch (c){
+            case 's' -> line -> Optional.of(line.replaceAll("\\s+", ""));
+            case 'u' -> line -> Optional.of(line.toUpperCase(Locale.ROOT));
+            case 'l' -> line -> Optional.of(line.toLowerCase(Locale.ROOT));
+            case 'd' -> _ -> Optional.empty();
+            default -> throw new IllegalArgumentException(STR."Unexpected value: \{c}");
         };
     }
+
+    public static Rule createRules(String rule){
+        return Objects.requireNonNull(rule).chars()
+                .mapToObj(StreamEditor::evaluate)
+                .reduce(Rule::andThen)
+                .orElse(Optional::of);
+    }
+
+
 
 }
