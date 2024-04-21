@@ -20,6 +20,11 @@ public final class StreamEditor {
             Objects.requireNonNull(second);
             return line -> first.rewrite(line).flatMap(second::rewrite);
         }
+
+        default Rule andThen(Rule rule) {
+            Objects.requireNonNull(rule);
+            return line -> this.rewrite(line).flatMap(rule::rewrite);
+        }
     }
 
     private final Rule rule;
@@ -62,7 +67,7 @@ public final class StreamEditor {
     public static Rule createRules(String rule){
         return Objects.requireNonNull(rule).chars()
                 .mapToObj(StreamEditor::evaluate)
-                .reduce(Rule::andThen)
+                .reduce((rule1, rule2) -> rule1.andThen(rule2)) // Rule::andThen if we remove the static method
                 .orElse(Optional::of);
     }
 

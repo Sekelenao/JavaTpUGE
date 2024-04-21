@@ -557,8 +557,6 @@ public class StreamEditorTest {
         }
     }
 
-    /*
-
     @Nested
     class Q6 {
         @Test
@@ -579,6 +577,8 @@ public class StreamEditorTest {
             assertThrows(NullPointerException.class, () -> rule.andThen(null));
         }
     }
+
+    /*
 
 
     @Nested
